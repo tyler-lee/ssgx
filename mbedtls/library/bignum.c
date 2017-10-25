@@ -76,6 +76,29 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 #define BITS_TO_LIMBS(i)  ( (i) / biL + ( (i) % biL != 0 ) )
 #define CHARS_TO_LIMBS(i) ( (i) / ciL + ( (i) % ciL != 0 ) )
 
+#ifdef __LHR_MEASURE__
+uint64_t __rdtscp() {
+#ifdef __linux__
+	uint64_t a, d;
+	//asm volatile ("xor %%rax, %%rax\n" "cpuid"::: "rax", "rbx", "rcx", "rdx");
+	asm volatile ("rdtscp" : "=a" (a), "=d" (d) : : "rcx");
+	return (d << 32) | a;
+#else
+	unsigned int tsc;
+
+	return __rdtscp(&tsc);
+#endif
+}
+uint64_t temp_cycles = 0;
+uint64_t temp_cycles_montmul = 0;
+size_t acc_count_private = 0;
+uint64_t acc_cycles_private = 0;
+size_t acc_count_public = 0;
+uint64_t acc_cycles_public = 0;
+size_t acc_count_montmul = 0;
+uint64_t acc_cycles_montmul = 0;
+#endif
+
 /*
  * Initialize one MPI
  */
@@ -1548,6 +1571,8 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
     size_t i, n, m;
     mbedtls_mpi_uint u0, u1, *d;
 
+	time_montmul_start();
+
     memset( T->p, 0, T->n * ciL );
 
     d = T->p;
@@ -1575,6 +1600,8 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
     else
         /* prevent timing attacks */
         mpi_sub_hlp( n, A->p, T->p );
+
+	time_montmul_acc();
 }
 
 /*
