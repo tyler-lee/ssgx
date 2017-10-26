@@ -306,15 +306,8 @@ void measurement_rsa_sign_performance() {
            "MBEDTLS_FS_IO and/or MBEDTLS_CTR_DRBG_C not defined.\n");
 }
 #else
-#ifdef __LHR_MEASURE__
-extern size_t acc_count_private;
-extern uint64_t acc_cycles_private;
-extern size_t acc_count_public;
-extern uint64_t acc_cycles_public;
-extern size_t acc_count_montmul;
-extern uint64_t acc_cycles_montmul;
-#endif
 void measurement_rsa_sign_performance() {
+#ifdef __LHR_MEASURE__
 	size_t count = 2000;
 	//size_t count = 1;
     int ret;
@@ -367,12 +360,9 @@ app:
         goto exit;
     }
 
-	acc_count_private = 0;
-	acc_cycles_private = 0;
-	acc_count_public = 0;
-	acc_cycles_public = 0;
-	acc_count_montmul = 0;
-	acc_cycles_montmul = 0;
+	lhr_timer_reset(ltt_rsa_private);
+	lhr_timer_reset(ltt_rsa_public);
+	lhr_timer_reset(ltt_mpi_montmul);
 	cycles = rdtscp();
 	for(int i = 0; i < count; i++) {
 		//call rsa sign
@@ -382,10 +372,9 @@ app:
 		}
 	}
 	cycles = rdtscp()-cycles;
-	cout << "Result (cycles private): " << acc_cycles_private / acc_count_private << endl << endl;
-	cout << "Result (cycles public): " << acc_cycles_public / acc_count_public << endl << endl;
-	cout << "Result (cycles montmul): " << acc_cycles_montmul / acc_count_montmul << endl << endl;
-
+	cout << "Result (cycles private): " << lhr_timer_get_cycle(ltt_rsa_private) / lhr_timer_get_count(ltt_rsa_private) << endl << endl;
+	cout << "Result (cycles public): " << lhr_timer_get_cycle(ltt_rsa_public) / lhr_timer_get_count(ltt_rsa_public) << endl << endl;
+	cout << "Result (cycles montmul): " << lhr_timer_get_cycle(ltt_mpi_montmul) / lhr_timer_get_count(ltt_mpi_montmul) << endl << endl;
 
 exit:
 
@@ -400,6 +389,9 @@ exit:
 #endif	//!__USE_ENCLAVE__
 
 	cout << "Result (cycles per inout): " << cycles / count << endl << endl;
+#else	//!__LHR_MEASURE__
+	cout << "If you want to measure performance, please enable __LHR_MEASURE__ in bignum.h or config.h"
+#endif	//!__LHR_MEASURE__
 }
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_RSA_C &&
           MBEDTLS_GENPRIME && MBEDTLS_FS_IO && MBEDTLS_CTR_DRBG_C */

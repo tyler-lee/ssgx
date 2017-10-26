@@ -89,14 +89,9 @@ uint64_t __rdtscp() {
 	return __rdtscp(&tsc);
 #endif
 }
-uint64_t temp_cycles = 0;
-uint64_t temp_cycles_montmul = 0;
-size_t acc_count_private = 0;
-uint64_t acc_cycles_private = 0;
-size_t acc_count_public = 0;
-uint64_t acc_cycles_public = 0;
-size_t acc_count_montmul = 0;
-uint64_t acc_cycles_montmul = 0;
+size_t lt_counts[ltt_size];	//lhr timer counts
+uint64_t lt_cycles[ltt_size];	//lhr timer cycles
+uint64_t lt_temp_cycles[ltt_size];	//lhr timer temp cycles
 #endif
 
 /*
@@ -1571,7 +1566,7 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
     size_t i, n, m;
     mbedtls_mpi_uint u0, u1, *d;
 
-	time_montmul_start();
+	lhr_timer_start(ltt_mpi_montmul);
 
     memset( T->p, 0, T->n * ciL );
 
@@ -1601,7 +1596,7 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
         /* prevent timing attacks */
         mpi_sub_hlp( n, A->p, T->p );
 
-	time_montmul_acc();
+	lhr_timer_acc(ltt_mpi_montmul);
 }
 
 /*

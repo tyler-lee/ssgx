@@ -139,51 +139,39 @@
 #define __LHR_MEASURE__
 #ifdef __LHR_MEASURE__
 uint64_t __rdtscp();
-extern uint64_t temp_cycles;
-extern uint64_t temp_cycles_montmul;
-extern size_t acc_count_private;
-extern uint64_t acc_cycles_private;
-extern size_t acc_count_public;
-extern uint64_t acc_cycles_public;
-extern size_t acc_count_montmul;
-extern uint64_t acc_cycles_montmul;
-#define time_start() \
+enum _lhr_timer_type {
+	ltt_rsa_private = 0,
+	ltt_rsa_public,
+	ltt_mpi_montmul,
+
+	ltt_size
+};
+extern size_t lt_counts[ltt_size];	//lhr timer counts
+extern uint64_t lt_cycles[ltt_size];	//lhr timer cycles
+extern uint64_t lt_temp_cycles[ltt_size];	//lhr timer temp cycles
+#define lhr_timer_reset(_lhr_timer_type) \
+	do {	\
+		lt_counts[_lhr_timer_type] = 0; \
+		lt_cycles[_lhr_timer_type] = 0; \
+	} while (0)
+#define lhr_timer_get_cycle(_lhr_timer_type) lt_cycles[_lhr_timer_type]
+#define lhr_timer_get_count(_lhr_timer_type) lt_counts[_lhr_timer_type]
+#define lhr_timer_start(_lhr_timer_type) \
     do {   \
-        temp_cycles = __rdtscp(); \
+		lt_temp_cycles[_lhr_timer_type] = __rdtscp();	\
     } while (0)
-#define time_private_start() time_start()
-#define time_private_acc()  \
+#define lhr_timer_acc(_lhr_timer_type)  \
     do { \
-        temp_cycles = __rdtscp() - temp_cycles; \
-		acc_cycles_private += temp_cycles; \
-		acc_count_private++;	\
-    } while (0)
-#define time_public_start() time_start()
-#define time_public_acc()  \
-    do { \
-        temp_cycles = __rdtscp() - temp_cycles; \
-		acc_cycles_public += temp_cycles; \
-		acc_count_public++;	\
-    } while (0)
-#define time_montmul_start() \
-    do {   \
-        temp_cycles_montmul = __rdtscp(); \
-    } while (0)
-#define time_montmul_acc()  \
-    do { \
-        temp_cycles_montmul = __rdtscp() - temp_cycles_montmul; \
-		acc_cycles_montmul += temp_cycles_montmul; \
-		acc_count_montmul++;	\
+		lt_cycles[_lhr_timer_type] += __rdtscp() - lt_temp_cycles[_lhr_timer_type];	\
+		lt_counts[_lhr_timer_type]++;	\
     } while (0)
 #else
-#define time_start()
-#define time_private_start()
-#define time_private_acc()
-#define time_public_start()
-#define time_public_acc()
-#define time_montmul_start()
-#define time_montmul_acc()
-#endif
+#define lhr_timer_reset(_lhr_timer_type)
+#define lhr_timer_get_count(_lhr_timer_type)
+#define lhr_timer_get_cycle(_lhr_timer_type)
+#define lhr_timer_start(_lhr_timer_type)
+#define lhr_timer_acc(_lhr_timer_type)
+#endif	//!__LHR_MEASURE__
 
 
 #ifdef __cplusplus

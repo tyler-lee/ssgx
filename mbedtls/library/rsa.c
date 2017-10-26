@@ -279,7 +279,7 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
     size_t olen;
     mbedtls_mpi T;
 
-	time_public_start();
+	lhr_timer_start(ltt_rsa_public);
     mbedtls_mpi_init( &T );
 
 #if defined(MBEDTLS_THREADING_C)
@@ -299,7 +299,7 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &T, &T, &ctx->E, &ctx->N, &ctx->RN ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
-	time_public_acc();
+	lhr_timer_acc(ltt_rsa_public);
 cleanup:
 #if defined(MBEDTLS_THREADING_C)
     if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )
@@ -367,7 +367,7 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     size_t olen;
     mbedtls_mpi T, T1, T2;
 
-    time_private_start();
+	lhr_timer_start(ltt_rsa_private);
     /* Make sure we have private key info, prevent possible misuse */
     if( ctx->P.p == NULL || ctx->Q.p == NULL || ctx->D.p == NULL )
         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
@@ -436,7 +436,7 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     olen = ctx->len;
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
-    time_private_acc();
+	lhr_timer_acc(ltt_rsa_private);
 
 cleanup:
 #if defined(MBEDTLS_THREADING_C)
