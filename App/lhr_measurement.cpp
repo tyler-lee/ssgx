@@ -360,9 +360,9 @@ app:
         goto exit;
     }
 
-	lhr_timer_reset(ltt_rsa_private);
-	lhr_timer_reset(ltt_rsa_public);
-	lhr_timer_reset(ltt_mpi_montmul);
+	for(int ltt = 0; ltt < ltt_size; ltt++) {
+		lhr_timer_reset(ltt);
+	}
 	cycles = rdtscp();
 	for(int i = 0; i < count; i++) {
 		//call rsa sign
@@ -372,9 +372,14 @@ app:
 		}
 	}
 	cycles = rdtscp()-cycles;
-	cout << "Result (cycles private): " << lhr_timer_get_cycle(ltt_rsa_private) / lhr_timer_get_count(ltt_rsa_private) << endl << endl;
-	cout << "Result (cycles public): " << lhr_timer_get_cycle(ltt_rsa_public) / lhr_timer_get_count(ltt_rsa_public) << endl << endl;
-	cout << "Result (cycles montmul): " << lhr_timer_get_cycle(ltt_mpi_montmul) / lhr_timer_get_count(ltt_mpi_montmul) << endl << endl;
+
+	for(int ltt = 0; ltt < ltt_size; ltt++) {
+		if(lhr_timer_get_count(ltt))
+			cout << "Result for lhr_timer_t ("
+				<< ltt << ") (cycles): "
+				<< lhr_timer_get_cycle(ltt)/lhr_timer_get_count(ltt)
+				<< endl;
+	}
 
 exit:
 

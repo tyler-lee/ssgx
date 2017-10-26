@@ -139,7 +139,7 @@
 #define __LHR_MEASURE__
 #ifdef __LHR_MEASURE__
 uint64_t __rdtscp();
-enum _lhr_timer_type {
+enum lhr_timer_t {
 	ltt_rsa_private = 0,
 	ltt_rsa_public,
 	ltt_mpi_montmul,
@@ -149,28 +149,28 @@ enum _lhr_timer_type {
 extern size_t lt_counts[ltt_size];	//lhr timer counts
 extern uint64_t lt_cycles[ltt_size];	//lhr timer cycles
 extern uint64_t lt_temp_cycles[ltt_size];	//lhr timer temp cycles
-#define lhr_timer_reset(_lhr_timer_type) \
+#define lhr_timer_reset(_ltt_) \
 	do {	\
-		lt_counts[_lhr_timer_type] = 0; \
-		lt_cycles[_lhr_timer_type] = 0; \
+		lt_counts[_ltt_] = 0; \
+		lt_cycles[_ltt_] = 0; \
 	} while (0)
-#define lhr_timer_get_cycle(_lhr_timer_type) lt_cycles[_lhr_timer_type]
-#define lhr_timer_get_count(_lhr_timer_type) lt_counts[_lhr_timer_type]
-#define lhr_timer_start(_lhr_timer_type) \
+#define lhr_timer_get_cycle(_ltt_) lt_cycles[_ltt_]
+#define lhr_timer_get_count(_ltt_) lt_counts[_ltt_]
+#define lhr_timer_start(_ltt_) \
     do {   \
-		lt_temp_cycles[_lhr_timer_type] = __rdtscp();	\
+		lt_temp_cycles[_ltt_] = __rdtscp();	\
     } while (0)
-#define lhr_timer_acc(_lhr_timer_type)  \
+#define lhr_timer_acc(_ltt_)  \
     do { \
-		lt_cycles[_lhr_timer_type] += __rdtscp() - lt_temp_cycles[_lhr_timer_type];	\
-		lt_counts[_lhr_timer_type]++;	\
+		lt_cycles[_ltt_] += __rdtscp() - lt_temp_cycles[_ltt_];	\
+		lt_counts[_ltt_]++;	\
     } while (0)
 #else
-#define lhr_timer_reset(_lhr_timer_type)
-#define lhr_timer_get_count(_lhr_timer_type)
-#define lhr_timer_get_cycle(_lhr_timer_type)
-#define lhr_timer_start(_lhr_timer_type)
-#define lhr_timer_acc(_lhr_timer_type)
+#define lhr_timer_reset(_ltt_)
+#define lhr_timer_get_count(_ltt_)
+#define lhr_timer_get_cycle(_ltt_)
+#define lhr_timer_start(_ltt_)
+#define lhr_timer_acc(_ltt_)
 #endif	//!__LHR_MEASURE__
 
 
