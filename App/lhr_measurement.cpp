@@ -21,8 +21,6 @@ using namespace std;
 //TODO: switch between enclave and app
 //#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
-//TODO: switch between using apic timer or not
-#define __USE_APIC__
 
 uint64_t rdtscp() {
 #ifdef __linux__
