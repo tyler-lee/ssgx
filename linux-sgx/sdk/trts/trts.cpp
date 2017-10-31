@@ -56,6 +56,19 @@ SGX_ACCESS_VERSION(trts, 1);
 
 #endif
 
+//TODO: lhr add implement sgx_get_thread_exit_info
+int SGXAPI sgx_get_thread_exit_info(int *vector, int *exit_type, int *valid) {
+	thread_data_t* td = get_thread_data();
+	ssa_gpr_t* ssa_gpr = reinterpret_cast<ssa_gpr_t*>(td->first_ssa_gpr);
+	exit_info_t* ei = &ssa_gpr->exit_info;
+
+	*vector = ei->vector;
+	*exit_type = ei->exit_type;
+	*valid = ei->valid;
+
+	return 0;
+}
+
 // sgx_is_within_enclave()
 // Parameters:
 //      addr - the start address of the buffer

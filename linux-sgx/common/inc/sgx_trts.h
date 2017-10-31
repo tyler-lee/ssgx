@@ -40,6 +40,16 @@
 extern "C" {
 #endif
 
+//TODO: lhr include exit_info_t, copy from internal/arch.h
+//typedef struct _exit_info_t
+//{
+    //uint32_t    vector:8;                [> Exception number of exceptions reported inside enclave <]
+    //uint32_t    exit_type:3;             [> 3: Hardware exceptions, 6: Software exceptions <]
+    //uint32_t    reserved:20;
+    //uint32_t    valid:1;                 [> 0: unsupported exceptions, 1: Supported exceptions <]
+//} exit_info_t;
+int SGXAPI sgx_get_thread_exit_info(int *vector, int *exit_type, int *valid);
+
 /* sgx_is_within_enclave()
  * Parameters:
  *      addr - the start address of the buffer
