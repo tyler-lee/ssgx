@@ -60,6 +60,8 @@ static uintptr_t g_veh_cookie = 0;
 #define ENC_VEH_POINTER(x)  (uintptr_t)(x) ^ g_veh_cookie
 #define DEC_VEH_POINTER(x)  (sgx_exception_handler_t)((x) ^ g_veh_cookie)
 
+//TODO: each time an exception happened, this value ++. If any exception happened, this value is no zero.
+size_t lhr_exception_count = 0;
 
 // sgx_register_exception_handler()
 //      register a custom exception handler
@@ -193,6 +195,8 @@ extern "C" __attribute__((regparm(1))) void internal_handle_exception(sgx_except
     uintptr_t *ntmp = NULL;
     uintptr_t xsp = 0;
 
+	lhr_exception_count++;
+
     if (thread_data->exception_flag < 0)
         goto failed_end;
     thread_data->exception_flag++;
@@ -294,6 +298,8 @@ extern "C" sgx_status_t trts_handle_exception(void *tcs)
     sgx_exception_info_t *info = NULL;
     uintptr_t sp, *new_sp = NULL;
     size_t size = 0;
+
+	lhr_exception_count++;
 
     if (tcs == NULL) goto default_handler;
     

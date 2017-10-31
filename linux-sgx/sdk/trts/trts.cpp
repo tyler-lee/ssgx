@@ -60,11 +60,28 @@ SGX_ACCESS_VERSION(trts, 1);
 int SGXAPI sgx_get_thread_exit_info(int *vector, int *exit_type, int *valid) {
 	thread_data_t* td = get_thread_data();
 	ssa_gpr_t* ssa_gpr = reinterpret_cast<ssa_gpr_t*>(td->first_ssa_gpr);
+
+	uint8_t* pbytes = reinterpret_cast<uint8_t*>(ssa_gpr);
+	pbytes += (td->ssa_frame_size << 12);
+	ssa_gpr = reinterpret_cast<ssa_gpr_t*>(pbytes);
+
 	exit_info_t* ei = &ssa_gpr->exit_info;
 
 	*vector = ei->vector;
 	*exit_type = ei->exit_type;
 	*valid = ei->valid;
+
+	return 0;
+}
+size_t SGXAPI sgx_get_exception_count() {
+	//thread_data_t* td = get_thread_data();
+	return lhr_exception_count;
+}
+int SGXAPI sgx_is_exception_happen() {
+	int vector, exit_type, valid;
+	sgx_get_thread_exit_info(&vector, &exit_type, &valid);
+
+	if(vector || exit_type || valid) return 1;
 
 	return 0;
 }

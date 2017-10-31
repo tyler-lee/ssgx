@@ -37,7 +37,6 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
-	int vector, exit_type, valid;
 	do {
 		if (global_command == Cmd_reset) {
 			cores_ready_flag = 0;
@@ -54,8 +53,7 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 			global_command = Cmd_reset;
 
 			//if valid == 1, an exception happened.
-			sgx_get_thread_exit_info(&vector, &exit_type, &valid);
-			if(valid == 1) printf("An AEX happened\n");
+			if(sgx_is_exception_happen()) printf("An AEX happened\n");
 
 			//do jobs
 			++hit;
@@ -70,6 +68,7 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	if(hit == 0) miss_max = count;
 	*hitCount = hit;
 	*maxMissCount = miss_max;
+	printf("lhr_exception_count: %zu\n", sgx_get_exception_count());
 
 	global_command = Cmd_exit;
 }

@@ -132,13 +132,13 @@ void seize_core(size_t cpu)
 	set_thread_affinity(cpu);
 
 	//cout << "Seize core " << cpu << endl;
-	printf("Seize core %zu\n", cpu);
+	//printf("Seize core %zu\n", cpu);
     sgx_status_t ret = SGX_ERROR_UNEXPECTED;
 
     ret = ecall_seize_core(global_eid, cpu);
     if (ret != SGX_SUCCESS) abort();
 
-	printf("Release core %zu\n", cpu);
+	//printf("Release core %zu\n", cpu);
 }
 
 #else	//!__USE_ENCLAVE__
