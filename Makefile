@@ -214,9 +214,13 @@ ifneq ($(Build_Mode), HW_RELEASE)
 	@echo "RUN  =>  $(App_Name) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
 
-mbedtls:
+mbedtls: lhr_sgx_sdk
 	$(MAKE) -C mbedtls lib
 	$(MAKE) -C mbedtls-SGX
+
+lhr_sgx_sdk:
+	$(MAKE) -C linux-sgx sdk_install_pkg USE_OPT_LIBS=0
+	@echo -e "no\n~/workspace_sgx\n" | ./linux-sgx/linux/installer/bin/sgx_linux_x64_sdk_1.9.100.39124.bin
 
 test:
 	g++ thread.cpp -o thread.run -lpthread --std=c++11
