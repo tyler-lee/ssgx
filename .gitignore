@@ -3,7 +3,7 @@
 
 # Temp file
 *un~
-*[tu].[hc]
+*_[tu].[hc]
 .~lock*
 .config_*
 
