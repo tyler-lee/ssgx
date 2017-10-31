@@ -4,6 +4,7 @@
 #include "Enclave.h"
 #include "Enclave_t.h"  /* print_string */
 #include "../Include/user_types.h"
+#include "sgx_trts.h"
 
 /*
  * printf:
@@ -36,6 +37,7 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
+	int vector, exit_type, valid;
 	do {
 		if (global_command == Cmd_reset) {
 			cores_ready_flag = 0;
@@ -50,6 +52,10 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 		if (cores_ready_flag == CORES_MASK) {
 			//reset cmd
 			global_command = Cmd_reset;
+
+			//if valid == 1, an exception happened.
+			sgx_get_thread_exit_info(&vector, &exit_type, &valid);
+			if(valid == 1) printf("An AEX happened\n");
 
 			//do jobs
 			++hit;
@@ -68,43 +74,18 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	global_command = Cmd_exit;
 }
 
-void ecall_compute_without_count(size_t count) {
-	global_command = Cmd_set;
-	while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
-
-	size_t hit = 0;
-	do {
-		if (global_command == Cmd_reset) {
-			cores_ready_flag = 0;
-			if (cores_ready_flag == 0) {
-				global_command = Cmd_set;
-			}
-		}
-		else {
-			cores_ready_flag |= 1;
-		}
-
-		if (cores_ready_flag == CORES_MASK) {
-			//reset cmd
-			global_command = Cmd_reset;
-
-			//do jobs
-			++hit;
-		}
-	} while (hit < count);
-
-	global_command = Cmd_exit;
-}
-
 void ecall_seize_core(size_t cpu) {
 	size_t cbit = 1 << cpu;
 
+	//int vector, exit_type, valid;
 	do {
 		if (global_command == Cmd_set) {
 			cores_ready_flag |= cbit;
 		}
 		else {
 			cores_ready_flag = 0;
+			//sgx_get_thread_exit_info(&vector, &exit_type, &valid);
+			//if(valid == 1) {printf("An AEX happended in seize_core");break;}
 		}
 	} while (global_command != Cmd_exit);
 }

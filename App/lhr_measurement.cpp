@@ -19,7 +19,7 @@ using namespace std;
 //const int CORES_MASK = (1 << CORES_PER_CPU) - 1;
 
 //TODO: switch between enclave and app
-//#define __USE_ENCLAVE__
+#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
@@ -439,6 +439,6 @@ void lhr_measurement() {
 	//cout << "There are "<< CORES_PER_CPU << " cores, and CORES_MASK is " << CORES_MASK << endl;
 	//cout << get_nprocs_conf() << get_nprocs() << endl << sysconf(_SC_NPROCESSORS_CONF) << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 	//measurement_empty_enclave();
-	//measurement_internal_thread();
-	measurement_rsa_sign_performance();
+	measurement_internal_thread();
+	//measurement_rsa_sign_performance();
 }
