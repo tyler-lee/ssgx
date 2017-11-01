@@ -55,7 +55,7 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 			//if valid == 1, an exception happened.
 			if(sgx_is_exception_happen()) printf("An AEX happened\n");
 
-			//do jobs
+			//do jobs: 剩余可用时间为安全时间-此次通信时间（miss_max）,++miss每次消耗1 cycle
 			++hit;
 			if (miss > miss_max) miss_max = miss;
 			miss = 0;

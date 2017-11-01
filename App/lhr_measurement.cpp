@@ -19,7 +19,7 @@ using namespace std;
 //const int CORES_MASK = (1 << CORES_PER_CPU) - 1;
 
 //TODO: switch between enclave and app
-#define __USE_ENCLAVE__
+//#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
@@ -159,7 +159,7 @@ void compute(size_t count) {
 
 	global_command = Cmd_set;
 	while (cores_ready_flag & CORES_MASK != CORES_MASK) cores_ready_flag |= 1;
-	printf("Enter core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
+	//printf("Enter core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
 
 	uint64_t hit = 0;
 	uint64_t miss = 0;
@@ -195,7 +195,7 @@ void compute(size_t count) {
 	printf("Hit: %zu, Miss: %zu, Max miss: %zu\n", hit, count - hit, miss_max);
 	if (hit != 0) printf("Average cycles: %zu\n", cycles/hit);
 
-	printf("Exit core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
+	//printf("Exit core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
 
 	global_command = Cmd_exit;
 }
@@ -205,7 +205,7 @@ void seize_core(int cpu) {
 	set_thread_affinity(cpu);
 	size_t cbit = 1 << cpu;
 
-	printf("Enter core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
+	//printf("Enter core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
 
 	do {
 		if (global_command == Cmd_set) {
@@ -216,7 +216,7 @@ void seize_core(int cpu) {
 		}
 	} while (global_command != Cmd_exit);
 
-	printf("Exit core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
+	//printf("Exit core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
 }
 
 #endif	//! __USE_ENCLAVE__
@@ -417,16 +417,16 @@ void lhr_measurement() {
 	show_thread_policy_and_priority();
 #endif
 
-	//const size_t clocks = 1 << 14;	//1 << 20 about 5000000 clocks in NUC6i3
-	//const size_t count = 1000000;
+	//const size_t clocks = 10000;	//1 << 20 about 5000000 clocks in NUC6i3
+	//const size_t count = 10000;
 	//size_t app_i = 0;
-	//volatile int access = 0;
 	//uint64_t cycles = 0;
 	//uint64_t temp;
+	//bool t = true;
 	//for (size_t j = 0; j < count; ++j) {
 		//app_i = 0;
 		//temp = rdtscp();
-		//while (++app_i < clocks) access = 0;
+		//while (app_i < clocks) if((t = !t)) ++app_i;
 		//cycles += rdtscp()-temp;
 	//}
 	//cout << "app: " << cycles / count << endl;
