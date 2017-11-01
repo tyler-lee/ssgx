@@ -201,6 +201,8 @@ void compute(size_t count) {
 }
 
 void seize_core(int cpu) {
+	assert(cpu <= CORES_PER_CPU);
+	assert(cpu > 0);
 	//bind current thread to core
 	set_thread_affinity(cpu);
 	size_t cbit = 1 << cpu;

@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>      /* vsnprintf */
+#include <string.h>	//memcpy
 
 #include "Enclave.h"
 #include "Enclave_t.h"  /* print_string */
@@ -29,6 +30,8 @@ enum Commands {
 //!!! MUST using volatile, otherwise threads CANNOT sync the latest value !!!
 volatile Commands global_command = Cmd_reset;
 volatile size_t cores_ready_flag = 0;
+volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
+volatile size_t counters_pre[CORES_PER_CPU];
 
 void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	global_command = Cmd_set;
@@ -74,6 +77,9 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 }
 
 void ecall_seize_core(size_t cpu) {
+	assert(cpu <= CORES_PER_CPU);
+	assert(cpu > 0);
+	counters[cpu] = 0;
 	size_t cbit = 1 << cpu;
 
 	//int vector, exit_type, valid;
@@ -83,8 +89,64 @@ void ecall_seize_core(size_t cpu) {
 		}
 		else {
 			cores_ready_flag = 0;
+			++counters[cpu];
 			//sgx_get_thread_exit_info(&vector, &exit_type, &valid);
 			//if(valid == 1) {printf("An AEX happended in seize_core");break;}
+		}
+	} while (global_command != Cmd_exit);
+}
+
+bool is_all_se_online() {
+	global_command = Cmd_set;
+	while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
+
+	size_t miss = 0;
+	do {
+		cores_ready_flag |= 1;
+
+		if (cores_ready_flag == CORES_MASK) {
+			global_command = Cmd_reset;
+			break;
+		}
+		else {
+			++miss;
+			if(miss > 9000) return false;
+		}
+	} while (true);
+	global_command = Cmd_exit;
+
+	for(size_t i = 1; i < CORES_PER_CPU; ++i) {
+		 counters_pre[i] = counters[i];
+	}
+
+
+	return true;
+}
+bool is_irq_happen() {
+	if(sgx_is_exception_happen()) return true;
+	size_t count = 0;
+	size_t temp = 0;
+	for(size_t i = 1; i < CORES_PER_CPU; ++i) {
+		temp = counters[i] - counters_pre[i];
+		if(temp > count) count = temp;
+	}
+	if(count > 9000) return true;
+
+	return false;
+}
+void seize_core_helper(size_t cpu) {
+	assert(cpu <= CORES_PER_CPU);
+	assert(cpu > 0);
+	counters[cpu] = 0;
+	size_t cbit = 1 << cpu;
+
+	do {
+		if (global_command == Cmd_set) {
+			cores_ready_flag |= cbit;
+		}
+		else {
+			cores_ready_flag = 0;
+			++counters[cpu];
 		}
 	} while (global_command != Cmd_exit);
 }
