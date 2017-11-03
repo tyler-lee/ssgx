@@ -26,12 +26,14 @@ enclave {
      */
     untrusted {
         void ocall_print_string([in, string] const char *str);
+		void ocall_empty();
     };
 
 	trusted {
 		public void ecall_compute(size_t val, [out]size_t* hitCount, [out]size_t* maxMissCount);
 		public void ecall_seize_core(size_t cbit);
 		public void ecall_empty();
+		public void ecall_empty_ocall();
 		public int ecall_rsa_sign_init(size_t key_size_in_bit);
 		public int ecall_rsa_sign_do(size_t count);
 		public int ecall_rsa_sign_destroy();

@@ -155,6 +155,9 @@ void seize_core_helper(size_t cpu) {
 
 void ecall_empty() {
 }
+void ecall_empty_ocall() {
+	ocall_empty();
+}
 
 //测量RSA计算性能
 #if !defined(MBEDTLS_CONFIG_FILE)

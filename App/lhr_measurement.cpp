@@ -224,6 +224,8 @@ void seize_core(int cpu) {
 #endif	//! __USE_ENCLAVE__
 
 //测量enclave进出的开销
+void ocall_empty() {
+}
 void measurement_empty_enclave() {
 #ifdef __USE_ENCLAVE__
 	size_t count = 1000000;
@@ -234,8 +236,21 @@ void measurement_empty_enclave() {
 		ret = ecall_empty(global_eid);
 		if (ret != SGX_SUCCESS) abort();
 	}
-	cycles = rdtscp()-cycles;
-	cout << "Result (cycles per inout): " << cycles / count << endl << endl;
+	cycles = (rdtscp()-cycles) / count;
+	cout << "Result (cycles per inout) ecall_empty: " << cycles << endl;
+
+	uint64_t cycles_ocall = rdtscp();
+	for(int i = 0; i < count; i++) {
+		ret = ecall_empty_ocall(global_eid);
+		if (ret != SGX_SUCCESS) abort();
+	}
+	cycles_ocall = (rdtscp()-cycles_ocall) / count;
+	cout << "Result (cycles per inout) ecall_empty_ocall: " << cycles_ocall << endl << endl;
+
+	cout
+		<< "ECall: " << cycles << endl
+		<< "OCall: " << cycles_ocall - cycles << endl << endl;
+
 #else
 #pragma message("Enable enclave first")
 #endif
@@ -424,7 +439,7 @@ void lhr_measurement() {
 	//cout.setf(ios::showbase[>|ios::uppercase<]);//设置0x头和大写
 	//cout << "There are "<< CORES_PER_CPU << " cores, and CORES_MASK is " << CORES_MASK << endl;
 	//cout << get_nprocs_conf() << get_nprocs() << endl << sysconf(_SC_NPROCESSORS_CONF) << sysconf(_SC_NPROCESSORS_ONLN) << endl;
-	//measurement_empty_enclave();
-	measurement_internal_thread();
+	measurement_empty_enclave();
+	//measurement_internal_thread();
 	//measurement_rsa_sign_performance();
 }
