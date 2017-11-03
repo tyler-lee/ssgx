@@ -35,7 +35,7 @@ volatile size_t counters_pre[CORES_PER_CPU];
 
 void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	global_command = Cmd_set;
-	while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
+	//while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
 
 	uint64_t hit = 0;
 	uint64_t miss = 0;
@@ -65,6 +65,7 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 		}
 		else {
 			++miss;
+			if(miss > 9000) break;
 		}
 	} while (hit < count);
 
@@ -96,6 +97,8 @@ void ecall_seize_core(size_t cpu) {
 	} while (global_command != Cmd_exit);
 }
 
+
+//TODO: 还有问题？什么时候让他退出？不能一次成功检测就退出，要在整个计算结束后。怎么区分两种情况
 bool is_all_se_online() {
 	global_command = Cmd_set;
 	while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
@@ -118,7 +121,6 @@ bool is_all_se_online() {
 	for(size_t i = 1; i < CORES_PER_CPU; ++i) {
 		 counters_pre[i] = counters[i];
 	}
-
 
 	return true;
 }

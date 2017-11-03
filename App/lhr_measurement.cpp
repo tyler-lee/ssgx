@@ -19,7 +19,7 @@ using namespace std;
 //const int CORES_MASK = (1 << CORES_PER_CPU) - 1;
 
 //TODO: switch between enclave and app
-//#define __USE_ENCLAVE__
+#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
@@ -418,22 +418,6 @@ void lhr_measurement() {
 	set_thread_policy_and_priority(SCHED_FIFO, sched_get_priority_max(SCHED_FIFO));
 	show_thread_policy_and_priority();
 #endif
-
-	//const size_t clocks = 10000;	//1 << 20 about 5000000 clocks in NUC6i3
-	//const size_t count = 10000;
-	//size_t app_i = 0;
-	//uint64_t cycles = 0;
-	//uint64_t temp;
-	//bool t = true;
-	//for (size_t j = 0; j < count; ++j) {
-		//app_i = 0;
-		//temp = rdtscp();
-		//while (app_i < clocks) if((t = !t)) ++app_i;
-		//cycles += rdtscp()-temp;
-	//}
-	//cout << "app: " << cycles / count << endl;
-	//return;
-
 	printf("\n\n");
 
 	//cout.setf(ios::hex,ios::basefield);//设置十六进制显示数值
