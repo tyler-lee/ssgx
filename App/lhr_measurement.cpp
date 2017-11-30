@@ -19,7 +19,7 @@ using namespace std;
 //const int CORES_MASK = (1 << CORES_PER_CPU) - 1;
 
 //TODO: switch between enclave and app
-#define __USE_ENCLAVE__
+//#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
@@ -112,7 +112,7 @@ void set_thread_affinity(int cpu) {
 void compute(size_t count)
 {
 	//bind current thread to core 0
-	set_thread_affinity(0);
+	//set_thread_affinity(0);
 
 	printf("%s measure enclave isntances communication performance, i.e., a successful check (loops): %zu\n", __FUNCTION__, count);
     sgx_status_t ret = SGX_ERROR_UNEXPECTED;
@@ -129,7 +129,7 @@ void compute(size_t count)
 }
 void seize_core(size_t cpu)
 {
-	set_thread_affinity(cpu);
+	//set_thread_affinity(cpu);
 
 	//cout << "Seize core " << cpu << endl;
 	//printf("Seize core %zu\n", cpu);
@@ -155,7 +155,7 @@ volatile size_t cores_ready_flag = 0;
 
 void compute(size_t count) {
 	//bind current thread to core 0
-	set_thread_affinity(0);
+	//set_thread_affinity(0);
 
 	global_command = Cmd_set;
 	while (cores_ready_flag & CORES_MASK != CORES_MASK) cores_ready_flag |= 1;
@@ -204,7 +204,7 @@ void seize_core(int cpu) {
 	assert(cpu <= CORES_PER_CPU);
 	assert(cpu > 0);
 	//bind current thread to core
-	set_thread_affinity(cpu);
+	//set_thread_affinity(cpu);
 	size_t cbit = 1 << cpu;
 
 	//printf("Enter core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
@@ -392,7 +392,8 @@ app:
 		if(lhr_timer_get_count(ltt))
 			cout << "Result for lhr_timer_t ("
 				<< ltt << ") (cycles): "
-				<< lhr_timer_get_cycle(ltt)/lhr_timer_get_count(ltt)
+				<< "total " << lhr_timer_get_cycle(ltt) << " (" << 100.0 * lhr_timer_get_cycle(ltt) / cycles << ")"
+				<< ", average " << lhr_timer_get_cycle(ltt)/lhr_timer_get_count(ltt)
 				<< endl;
 	}
 
@@ -439,7 +440,7 @@ void lhr_measurement() {
 	//cout.setf(ios::showbase[>|ios::uppercase<]);//设置0x头和大写
 	//cout << "There are "<< CORES_PER_CPU << " cores, and CORES_MASK is " << CORES_MASK << endl;
 	//cout << get_nprocs_conf() << get_nprocs() << endl << sysconf(_SC_NPROCESSORS_CONF) << sysconf(_SC_NPROCESSORS_ONLN) << endl;
-	measurement_empty_enclave();
-	//measurement_internal_thread();
-	//measurement_rsa_sign_performance();
+	//measurement_empty_enclave();
+	measurement_internal_thread();
+	measurement_rsa_sign_performance();
 }
