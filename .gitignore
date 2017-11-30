@@ -1,5 +1,6 @@
 # This project specified
 *.run
+linux-sgx/
 
 # Temp file
 *un~

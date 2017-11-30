@@ -51,8 +51,8 @@ extern "C" {
 int SGXAPI sgx_get_thread_exit_info(int *vector, int *exit_type, int *valid);
 //TODO: each time an exception happened, this value ++. If any exception happened, this value is no zero.
 extern size_t lhr_exception_count;
-size_t SGXAPI sgx_get_exception_count();
-int SGXAPI sgx_is_exception_happen();
+size_t SGXAPI sgx_get_exception_count(void);
+int SGXAPI sgx_is_exception_happen(void);
 
 /* sgx_is_within_enclave()
  * Parameters:
