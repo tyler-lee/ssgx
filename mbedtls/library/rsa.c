@@ -279,7 +279,7 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
     size_t olen;
     mbedtls_mpi T;
 
-	/*lhr_timer_start(ltt_rsa_public);*/
+	lhr_timer_start(ltt_rsa_public);
     mbedtls_mpi_init( &T );
 
 #if defined(MBEDTLS_THREADING_C)
@@ -299,7 +299,7 @@ int mbedtls_rsa_public( mbedtls_rsa_context *ctx,
     MBEDTLS_MPI_CHK( mbedtls_mpi_exp_mod( &T, &T, &ctx->E, &ctx->N, &ctx->RN ) );
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
-	/*lhr_timer_acc(ltt_rsa_public);*/
+	lhr_timer_acc(ltt_rsa_public);
 cleanup:
 #if defined(MBEDTLS_THREADING_C)
     if( mbedtls_mutex_unlock( &ctx->mutex ) != 0 )

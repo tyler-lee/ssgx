@@ -141,7 +141,7 @@
 uint64_t __rdtscp();
 enum lhr_timer_t {
 	ltt_rsa_private = 0,
-	//ltt_rsa_public,
+	ltt_rsa_public,
 	ltt_mpi_montmul,
 
 	ltt_size
