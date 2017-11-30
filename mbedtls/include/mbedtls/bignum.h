@@ -141,11 +141,12 @@
 uint64_t __rdtscp();
 enum lhr_timer_t {
 	ltt_rsa_private = 0,
-	ltt_rsa_public,
+	//ltt_rsa_public,
 	ltt_mpi_montmul,
 
 	ltt_size
 };
+extern uint64_t lt_flags[ltt_size];	//indicate whether lhr_timer_t is enabled
 extern size_t lt_counts[ltt_size];	//lhr timer counts
 extern uint64_t lt_cycles[ltt_size];	//lhr timer cycles
 extern uint64_t lt_temp_cycles[ltt_size];	//lhr timer temp cycles
