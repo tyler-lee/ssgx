@@ -29,34 +29,48 @@ enum Commands {
 
 //!!! MUST using volatile, otherwise threads CANNOT sync the latest value !!!
 volatile Commands global_command = Cmd_reset;
-volatile size_t cores_ready_flag = 0;
+//volatile size_t cores_ready_flag = 0;
+volatile uint8_t ready_flags[CORES_PER_CPU][64];
 volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
 volatile size_t counters_pre[CORES_PER_CPU];
+
+uint8_t count_flags() {
+	uint8_t ret = 0;
+	for(int i=0; i<CORES_PER_CPU; ++i) {
+		ret += ready_flags[i][0];
+	}
+
+	return ret;
+}
 
 void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	global_command = Cmd_set;
 	//while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
 
+	ready_flags[0][0] = 1;
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
+	uint8_t flags = 0;
 	do {
 		if (global_command == Cmd_reset) {
-			cores_ready_flag = 0;
-			if (cores_ready_flag == 0) {
+			ready_flags[0][0] = 0;
+			if (ready_flags[0][0] == 0) {
 				global_command = Cmd_set;
 			}
+			continue;
 		}
 		else {
-			cores_ready_flag |= 1;
+			ready_flags[0][0] |= 1;
 		}
 
-		if (cores_ready_flag == CORES_MASK) {
+		flags = count_flags();
+		if (flags == CORES_PER_CPU) {
 			//reset cmd
 			global_command = Cmd_reset;
 
 			//if valid == 1, an exception happened.
-			if(sgx_is_exception_happen()) printf("An AEX happened\n");
+			//if(sgx_is_exception_happen()) printf("An AEX happened\n");
 
 			//do jobs: 剩余可用时间为安全时间-此次通信时间（miss_max）,++miss每次消耗1 cycle
 			++hit;
@@ -65,32 +79,33 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 		}
 		else {
 			++miss;
-			if(miss > 9000) break;
+			//if(miss > 9000) break;
 		}
 	} while (hit < count);
 
 	if(hit == 0) miss_max = count;
 	*hitCount = hit;
 	*maxMissCount = miss_max;
-	printf("lhr_exception_count: %zu\n", sgx_get_exception_count());
+	//printf("lhr_exception_count: %zu\n", sgx_get_exception_count());
 
 	global_command = Cmd_exit;
 }
 
 void ecall_seize_core(size_t cpu) {
-	assert(cpu <= CORES_PER_CPU);
+	assert(cpu < CORES_PER_CPU);
 	assert(cpu > 0);
-	counters[cpu] = 0;
-	size_t cbit = 1 << cpu;
+	ready_flags[cpu][0] = 0;
+	//counters[cpu] = 0;
+	//size_t cbit = 1 << cpu;
 
 	//int vector, exit_type, valid;
 	do {
 		if (global_command == Cmd_set) {
-			cores_ready_flag |= cbit;
+			ready_flags[cpu][0] |= 1;
 		}
 		else {
-			cores_ready_flag = 0;
-			++counters[cpu];
+			ready_flags[cpu][0] = 0;
+			//++counters[cpu];
 			//sgx_get_thread_exit_info(&vector, &exit_type, &valid);
 			//if(valid == 1) {printf("An AEX happended in seize_core");break;}
 		}
@@ -99,59 +114,59 @@ void ecall_seize_core(size_t cpu) {
 
 
 //TODO: 还有问题？什么时候让他退出？不能一次成功检测就退出，要在整个计算结束后。怎么区分两种情况
-bool is_all_se_online() {
-	global_command = Cmd_set;
-	while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
+//bool is_all_se_online() {
+	//global_command = Cmd_set;
+	//while ((cores_ready_flag & CORES_MASK) != CORES_MASK) cores_ready_flag |= 1;
 
-	size_t miss = 0;
-	do {
-		cores_ready_flag |= 1;
+	//size_t miss = 0;
+	//do {
+		//cores_ready_flag |= 1;
 
-		if (cores_ready_flag == CORES_MASK) {
-			global_command = Cmd_reset;
-			break;
-		}
-		else {
-			++miss;
-			if(miss > 9000) return false;
-		}
-	} while (true);
-	global_command = Cmd_exit;
+		//if (cores_ready_flag == CORES_MASK) {
+			//global_command = Cmd_reset;
+			//break;
+		//}
+		//else {
+			//++miss;
+			//if(miss > 9000) return false;
+		//}
+	//} while (true);
+	//global_command = Cmd_exit;
 
-	for(size_t i = 1; i < CORES_PER_CPU; ++i) {
-		 counters_pre[i] = counters[i];
-	}
+	//for(size_t i = 1; i < CORES_PER_CPU; ++i) {
+		 //counters_pre[i] = counters[i];
+	//}
 
-	return true;
-}
-bool is_irq_happen() {
-	if(sgx_is_exception_happen()) return true;
-	size_t count = 0;
-	size_t temp = 0;
-	for(size_t i = 1; i < CORES_PER_CPU; ++i) {
-		temp = counters[i] - counters_pre[i];
-		if(temp > count) count = temp;
-	}
-	if(count > 9000) return true;
+	//return true;
+//}
+//bool is_irq_happen() {
+	//if(sgx_is_exception_happen()) return true;
+	//size_t count = 0;
+	//size_t temp = 0;
+	//for(size_t i = 1; i < CORES_PER_CPU; ++i) {
+		//temp = counters[i] - counters_pre[i];
+		//if(temp > count) count = temp;
+	//}
+	//if(count > 9000) return true;
 
-	return false;
-}
-void seize_core_helper(size_t cpu) {
-	assert(cpu <= CORES_PER_CPU);
-	assert(cpu > 0);
-	counters[cpu] = 0;
-	size_t cbit = 1 << cpu;
+	//return false;
+//}
+//void seize_core_helper(size_t cpu) {
+	//assert(cpu <= CORES_PER_CPU);
+	//assert(cpu > 0);
+	//counters[cpu] = 0;
+	//size_t cbit = 1 << cpu;
 
-	do {
-		if (global_command == Cmd_set) {
-			cores_ready_flag |= cbit;
-		}
-		else {
-			cores_ready_flag = 0;
-			++counters[cpu];
-		}
-	} while (global_command != Cmd_exit);
-}
+	//do {
+		//if (global_command == Cmd_set) {
+			//cores_ready_flag |= cbit;
+		//}
+		//else {
+			//cores_ready_flag = 0;
+			//++counters[cpu];
+		//}
+	//} while (global_command != Cmd_exit);
+//}
 
 void ecall_empty() {
 }

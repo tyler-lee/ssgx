@@ -19,7 +19,7 @@ using namespace std;
 //const int CORES_MASK = (1 << CORES_PER_CPU) - 1;
 
 //TODO: switch between enclave and app
-//#define __USE_ENCLAVE__
+#define __USE_ENCLAVE__
 #define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
@@ -151,32 +151,46 @@ enum Commands {
 
 //!!! MUST using volatile, otherwise threads CANNOT sync the latest value !!!
 volatile Commands global_command = Cmd_reset;
-volatile size_t cores_ready_flag = 0;
+volatile uint8_t ready_flags[CORES_PER_CPU][64];
+
+uint8_t count_flags() {
+	uint8_t ret = 0;
+	for(int i=0; i<CORES_PER_CPU; ++i) {
+		ret += ready_flags[i][0];
+	}
+
+	return ret;
+}
 
 void compute(size_t count) {
 	//bind current thread to core 0
 	//set_thread_affinity(0);
 
 	global_command = Cmd_set;
-	while (cores_ready_flag & CORES_MASK != CORES_MASK) cores_ready_flag |= 1;
+	ready_flags[0][0] = 1;
+	while (count_flags() != CORES_PER_CPU);
 	//printf("Enter core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
 
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
+	uint8_t flags = 0;
 	uint64_t cycles = rdtscp();
 	do {
+
 		if (global_command == Cmd_reset) {
-			cores_ready_flag = 0;
-			if (cores_ready_flag == 0) {
+			ready_flags[0][0] = 0;
+			if (ready_flags[0][0] == 0) {
 				global_command = Cmd_set;
 			}
+			continue;
 		}
 		else {
-			cores_ready_flag |= 1;
+			ready_flags[0][0] |= 1;
 		}
 
-		if (cores_ready_flag == CORES_MASK) {
+		flags = count_flags();
+		if (flags == CORES_PER_CPU) {
 			//reset cmd
 			global_command = Cmd_reset;
 
@@ -201,20 +215,20 @@ void compute(size_t count) {
 }
 
 void seize_core(int cpu) {
-	assert(cpu <= CORES_PER_CPU);
+	assert(cpu < CORES_PER_CPU);
 	assert(cpu > 0);
+	ready_flags[cpu][0] = 0;
 	//bind current thread to core
 	//set_thread_affinity(cpu);
-	size_t cbit = 1 << cpu;
 
 	//printf("Enter core: %d, cores_ready_flag: %zX\n", cpu, cores_ready_flag);
 
 	do {
 		if (global_command == Cmd_set) {
-			cores_ready_flag |= cbit;
+			ready_flags[cpu][0] |= 1;
 		}
 		else {
-			cores_ready_flag = 0;
+			ready_flags[cpu][0] = 0;
 		}
 	} while (global_command != Cmd_exit);
 
@@ -442,5 +456,5 @@ void lhr_measurement() {
 	//cout << get_nprocs_conf() << get_nprocs() << endl << sysconf(_SC_NPROCESSORS_CONF) << sysconf(_SC_NPROCESSORS_ONLN) << endl;
 	//measurement_empty_enclave();
 	measurement_internal_thread();
-	measurement_rsa_sign_performance();
+	//measurement_rsa_sign_performance();
 }
