@@ -151,13 +151,14 @@ enum Commands {
 
 //!!! MUST using volatile, otherwise threads CANNOT sync the latest value !!!
 volatile Commands global_command = Cmd_reset;
-//volatile uint8_t ready_flags[CORES_PER_CPU][64];
-volatile uint8_t ready_flags[CORES_PER_CPU];	//make sure each flag on different cache line
+const int CACHE_LINE_SIZE = 64;
+volatile uint8_t ready_flags[CORES_PER_CPU][CACHE_LINE_SIZE];
+//volatile uint8_t ready_flags[CORES_PER_CPU];	//make sure each flag on different cache line
 
 uint8_t count_flags() {
 	uint8_t ret = 0;
 	for(int i=0; i<CORES_PER_CPU; ++i) {
-		ret += ready_flags[i];
+		ret += ready_flags[i][0];
 	}
 
 	return ret;
@@ -168,7 +169,7 @@ void compute(size_t count) {
 	//set_thread_affinity(0);
 
 	global_command = Cmd_set;
-	ready_flags[0] = 1;
+	ready_flags[0][0] = 0;
 	while (count_flags() != CORES_PER_CPU);
 	//printf("Enter core: %d, cores_ready_flag: %zX\n", 0, cores_ready_flag);
 
@@ -180,14 +181,14 @@ void compute(size_t count) {
 	do {
 
 		if (global_command == Cmd_reset) {
-			ready_flags[0] = 0;
-			if (ready_flags[0] == 0) {
+			ready_flags[0][0] = 0;
+			if (ready_flags[0][0] == 0) {
 				global_command = Cmd_set;
 			}
 			continue;
 		}
 		else {
-			ready_flags[0] |= 1;
+			ready_flags[0][0] |= 1;
 		}
 
 		flags = count_flags();
@@ -218,7 +219,7 @@ void compute(size_t count) {
 void seize_core(int cpu) {
 	assert(cpu < CORES_PER_CPU);
 	assert(cpu > 0);
-	ready_flags[cpu] = 0;
+	ready_flags[cpu][0] = 0;
 	//bind current thread to core
 	//set_thread_affinity(cpu);
 
@@ -226,10 +227,10 @@ void seize_core(int cpu) {
 
 	do {
 		if (global_command == Cmd_set) {
-			ready_flags[cpu] |= 1;
+			ready_flags[cpu][0] |= 1;
 		}
 		else {
-			ready_flags[cpu] = 0;
+			ready_flags[cpu][0] = 0;
 		}
 	} while (global_command != Cmd_exit);
 
