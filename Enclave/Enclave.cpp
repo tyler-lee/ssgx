@@ -31,38 +31,42 @@ enum Commands {
 volatile Commands global_command = Cmd_reset;
 //volatile size_t cores_ready_flag = 0;
 const int CACHE_LINE_SIZE = 64;
-volatile uint8_t ready_flags[CORES_PER_CPU][CACHE_LINE_SIZE];
+volatile unsigned char ready_flags[CORES_PER_CPU][CACHE_LINE_SIZE];
+volatile unsigned char sync_flag = 0;
 //volatile uint8_t ready_flags[CORES_PER_CPU];
-volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
-volatile size_t counters_pre[CORES_PER_CPU];
+//volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
+//volatile size_t counters_pre[CORES_PER_CPU];
 
 uint8_t count_flags() {
 	uint8_t ret = 0;
 	for(int i=0; i<CORES_PER_CPU; ++i) {
-		ret += ready_flags[i][0];
+		if(sync_flag == ready_flags[i][0]) ret++;
 	}
 
 	return ret;
+}
+//#include "sgx_trts.h"
+void update_sync_flag() {
+	//sgx_read_rand((unsigned char*)&sync_flag, 1);
+	sync_flag++;
 }
 
 void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	global_command = Cmd_set;
 
-	ready_flags[0][0] = 0;
+	ready_flags[0][0] = sync_flag;
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
 	uint8_t flags = 0;
 	do {
 		if (global_command == Cmd_reset) {
-			ready_flags[0][0] = 0;
-			if (ready_flags[0][0] == 0) {
-				global_command = Cmd_set;
-			}
+			update_sync_flag();
+			global_command = Cmd_set;
 			continue;
 		}
 		else {
-			ready_flags[0][0] |= 1;
+			ready_flags[0][0] = sync_flag;
 		}
 
 		flags = count_flags();
@@ -95,21 +99,21 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 void ecall_seize_core(size_t cpu) {
 	assert(cpu < CORES_PER_CPU);
 	assert(cpu > 0);
-	ready_flags[cpu][0] = 0;
+	ready_flags[cpu][0] = sync_flag;
 	//counters[cpu] = 0;
 	//size_t cbit = 1 << cpu;
 
 	//int vector, exit_type, valid;
 	do {
 		if (global_command == Cmd_set) {
-			ready_flags[cpu][0] |= 1;
+			ready_flags[cpu][0] = sync_flag;
 		}
-		else {
-			ready_flags[cpu][0] = 0;
+		//else {
+			//ready_flags[cpu][0] = 0;
 			//++counters[cpu];
 			//sgx_get_thread_exit_info(&vector, &exit_type, &valid);
 			//if(valid == 1) {printf("An AEX happended in seize_core");break;}
-		}
+		//}
 	} while (global_command != Cmd_exit);
 }
 
