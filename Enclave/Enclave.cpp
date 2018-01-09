@@ -33,16 +33,15 @@ volatile Commands global_command = Cmd_reset;
 const int CACHE_LINE_SIZE = 64;
 volatile uint8_t ready_flags[CORES_PER_CPU][CACHE_LINE_SIZE];
 //volatile uint8_t ready_flags[CORES_PER_CPU];
-volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
-volatile size_t counters_pre[CORES_PER_CPU];
+//volatile size_t counters[CORES_PER_CPU];	//用于计数计算期间过去多少时间，防止计算期间被中断而无法发现：max(计算结束时计数-开始计算时技术)，近似表达
+//volatile size_t counters_pre[CORES_PER_CPU];
 
-uint8_t count_flags() {
-	uint8_t ret = 0;
+bool is_all_se_online() {
 	for(int i=0; i<CORES_PER_CPU; ++i) {
-		ret += ready_flags[i][0];
+		if(!ready_flags[i][0]) return false;
 	}
 
-	return ret;
+	return true;
 }
 
 void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
@@ -52,23 +51,16 @@ void ecall_compute(size_t count, size_t* hitCount, size_t* maxMissCount) {
 	uint64_t hit = 0;
 	uint64_t miss = 0;
 	uint64_t miss_max = 0;
-	uint8_t flags = 0;
 	do {
 		if (global_command == Cmd_reset) {
-			ready_flags[0][0] = 0;
-			if (ready_flags[0][0] == 0) {
-				global_command = Cmd_set;
-			}
-			continue;
+			global_command = Cmd_set;
 		}
-		else {
-			ready_flags[0][0] |= 1;
-		}
+		ready_flags[0][0] |= 1;
 
-		flags = count_flags();
-		if (flags == CORES_PER_CPU) {
+		if (is_all_se_online()) {
 			//reset cmd
 			global_command = Cmd_reset;
+			ready_flags[0][0] = 0;
 
 			//if valid == 1, an exception happened.
 			//if(sgx_is_exception_happen()) printf("An AEX happened\n");
