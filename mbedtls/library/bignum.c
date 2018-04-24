@@ -1567,7 +1567,7 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
     size_t i, n, m;
     mbedtls_mpi_uint u0, u1, *d;
 
-	if(lt_flags[ltt_mpi_montmul]) lhr_timer_start(ltt_mpi_montmul);
+	lhr_timer_start(ltt_mpi_montmul);
 
     memset( T->p, 0, T->n * ciL );
 
@@ -1597,7 +1597,7 @@ static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi
         /* prevent timing attacks */
         mpi_sub_hlp( n, A->p, T->p );
 
-	if(lt_flags[ltt_mpi_montmul]) lhr_timer_acc(ltt_mpi_montmul);
+	lhr_timer_acc(ltt_mpi_montmul);
 }
 
 /*

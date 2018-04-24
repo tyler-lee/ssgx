@@ -368,7 +368,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     mbedtls_mpi T, T1, T2;
 
 	lhr_timer_start(ltt_rsa_private);
-	lt_flags[ltt_mpi_montmul] = 1;
     /* Make sure we have private key info, prevent possible misuse */
     if( ctx->P.p == NULL || ctx->Q.p == NULL || ctx->D.p == NULL )
         return( MBEDTLS_ERR_RSA_BAD_INPUT_DATA );
@@ -437,7 +436,6 @@ int mbedtls_rsa_private( mbedtls_rsa_context *ctx,
     olen = ctx->len;
     MBEDTLS_MPI_CHK( mbedtls_mpi_write_binary( &T, output, olen ) );
 
-	lt_flags[ltt_mpi_montmul] = 0;
 	lhr_timer_acc(ltt_rsa_private);
 
 cleanup:

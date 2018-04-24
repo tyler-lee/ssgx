@@ -187,7 +187,6 @@ void measurement_rsa_sign_performance() {
            "MBEDTLS_FS_IO and/or MBEDTLS_CTR_DRBG_C not defined.\n");
 }
 #else
-volatile int count_mpi_montmul = 0;
 mbedtls_rsa_context rsa;
 mbedtls_entropy_context entropy;
 mbedtls_ctr_drbg_context ctr_drbg;
@@ -228,7 +227,6 @@ int ecall_rsa_sign_do(size_t count) {
     unsigned char hash[32];
     unsigned char buf[MBEDTLS_MPI_MAX_SIZE];
 
-	count_mpi_montmul = 0;
 	for(int i = 0; i < count; i++) {
 		//call rsa sign
 		if( ( ret = mbedtls_rsa_pkcs1_sign( &rsa, NULL, NULL, MBEDTLS_RSA_PRIVATE, MBEDTLS_MD_SHA256, 20, hash, buf ) ) != 0 ) {
@@ -249,7 +247,7 @@ exit:
 		return -1;
 	}
 
-	return count_mpi_montmul;
+	return 0;
 }
 int ecall_rsa_sign_destroy() {
 	mbedtls_rsa_free( &rsa );

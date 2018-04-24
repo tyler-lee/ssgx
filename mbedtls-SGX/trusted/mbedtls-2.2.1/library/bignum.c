@@ -1537,12 +1537,9 @@ static void mpi_montg_init( mbedtls_mpi_uint *mm, const mbedtls_mpi *N )
 /*
  * Montgomery multiplication: A = A * B * R^-1 mod N  (HAC 14.36)
  */
-extern volatile int count_mpi_montmul;
 static void mpi_montmul( mbedtls_mpi *A, const mbedtls_mpi *B, const mbedtls_mpi *N, mbedtls_mpi_uint mm,
                          const mbedtls_mpi *T )
 {
-	count_mpi_montmul++;
-
     size_t i, n, m;
     mbedtls_mpi_uint u0, u1, *d;
 

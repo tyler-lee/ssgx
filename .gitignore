@@ -3,6 +3,7 @@
 linux-sgx/
 sgxsdk/
 app
+app_*
 
 # Temp file
 *un~

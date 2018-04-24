@@ -20,7 +20,6 @@ using namespace std;
 
 //TODO: switch between enclave and app
 #define __USE_ENCLAVE__
-#define __USE_FIFO_HIGHEST_PRIORITY__
 
 uint64_t rdtscp() {
 #ifdef __linux__
@@ -338,7 +337,6 @@ void measurement_rsa_sign_performance() {
 }
 #else
 void measurement_rsa_sign_performance() {
-#ifdef __LHR_MEASURE__
 	size_t count = 100;
 	//size_t count = 1;
     int ret;
@@ -360,7 +358,6 @@ enclave:
 	sgx_ret = ecall_rsa_sign_do(global_eid, &ret, count);
 	cycles = rdtscp()-cycles;
     if (sgx_ret != SGX_SUCCESS || ret == -1) abort();
-	cout << "cycles per mpi_montmul: " << cycles / ret << endl << endl;
 
 
 	sgx_ret = ecall_rsa_sign_destroy(global_eid, &ret);
@@ -391,9 +388,11 @@ app:
         goto exit;
     }
 
+#ifdef __LHR_MEASURE__
 	for(int ltt = 0; ltt < ltt_size; ltt++) {
 		lhr_timer_reset(ltt);
 	}
+#endif
 	cycles = rdtscp();
 	for(int i = 0; i < count; i++) {
 		//call rsa sign
@@ -404,6 +403,7 @@ app:
 	}
 	cycles = rdtscp()-cycles;
 
+#ifdef __LHR_MEASURE__
 	for(int ltt = 0; ltt < ltt_size; ltt++) {
 		if(lhr_timer_get_count(ltt))
 			cout << "Result for lhr_timer_t ("
@@ -412,6 +412,7 @@ app:
 				<< ", average " << lhr_timer_get_cycle(ltt)/lhr_timer_get_count(ltt)
 				<< endl;
 	}
+#endif
 
 exit:
 
@@ -425,10 +426,7 @@ exit:
 #endif
 #endif	//!__USE_ENCLAVE__
 
-	cout << "Result (cycles per inout): " << cycles / count << endl << endl;
-#else	//!__LHR_MEASURE__
-	cout << "If you want to measure performance, please enable __LHR_MEASURE__ in bignum.h or config.h"
-#endif	//!__LHR_MEASURE__
+	cout << "Result (cycles per mbedtls_rsa_pkcs1_sign): " << cycles / count << endl << endl;
 }
 #endif /* MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_RSA_C &&
           MBEDTLS_GENPRIME && MBEDTLS_FS_IO && MBEDTLS_CTR_DRBG_C */
@@ -445,7 +443,7 @@ void lhr_measurement() {
 	//if(system("CLS")) system("clear");
 	system("clear");
 
-#ifdef __USE_FIFO_HIGHEST_PRIORITY__
+#ifdef __USE_ENCLAVE__	 //we need highest priority of FIFO in our method
 	printf("In %s:\n", __FUNCTION__);
 	set_thread_policy_and_priority(SCHED_FIFO, sched_get_priority_max(SCHED_FIFO));
 	show_thread_policy_and_priority();

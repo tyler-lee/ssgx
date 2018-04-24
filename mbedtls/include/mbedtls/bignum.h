@@ -136,7 +136,7 @@
 
 
 //TODO: add by lhr, measuring performance
-#define __LHR_MEASURE__
+//#define __LHR_MEASURE__
 #ifdef __LHR_MEASURE__
 uint64_t __rdtscp();
 enum lhr_timer_t {
