@@ -135,57 +135,6 @@
 #endif /* !MBEDTLS_HAVE_INT32 && _MSC_VER && _M_AMD64 */
 
 
-//TODO: add by lhr, measuring performance
-#define __LHR_MEASURE__
-#ifdef __LHR_MEASURE__
-uint64_t __rdtscp();
-extern uint64_t temp_cycles;
-extern uint64_t temp_cycles_montmul;
-extern size_t acc_count_private;
-extern uint64_t acc_cycles_private;
-extern size_t acc_count_public;
-extern uint64_t acc_cycles_public;
-extern size_t acc_count_montmul;
-extern uint64_t acc_cycles_montmul;
-#define time_start() \
-    do {   \
-        temp_cycles = __rdtscp(); \
-    } while (0)
-#define time_private_start() time_start()
-#define time_private_acc()  \
-    do { \
-        temp_cycles = __rdtscp() - temp_cycles; \
-		acc_cycles_private += temp_cycles; \
-		acc_count_private++;	\
-    } while (0)
-#define time_public_start() time_start()
-#define time_public_acc()  \
-    do { \
-        temp_cycles = __rdtscp() - temp_cycles; \
-		acc_cycles_public += temp_cycles; \
-		acc_count_public++;	\
-    } while (0)
-#define time_montmul_start() \
-    do {   \
-        temp_cycles_montmul = __rdtscp(); \
-    } while (0)
-#define time_montmul_acc()  \
-    do { \
-        temp_cycles_montmul = __rdtscp() - temp_cycles_montmul; \
-		acc_cycles_montmul += temp_cycles_montmul; \
-		acc_count_montmul++;	\
-    } while (0)
-#else
-#define time_start()
-#define time_private_start()
-#define time_private_acc()
-#define time_public_start()
-#define time_public_acc()
-#define time_montmul_start()
-#define time_montmul_acc()
-#endif
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif

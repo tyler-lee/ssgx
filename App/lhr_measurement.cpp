@@ -339,7 +339,7 @@ void measurement_rsa_sign_performance() {
 #else
 void measurement_rsa_sign_performance() {
 #ifdef __LHR_MEASURE__
-	size_t count = 2000;
+	size_t count = 100;
 	//size_t count = 1;
     int ret;
 	uint64_t cycles;
