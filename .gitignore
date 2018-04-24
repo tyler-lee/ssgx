@@ -1,6 +1,8 @@
 # This project specified
 *.run
 linux-sgx/
+sgxsdk/
+app
 
 # Temp file
 *un~
