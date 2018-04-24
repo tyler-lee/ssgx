@@ -10,15 +10,6 @@ enclave {
      *  [*]: implies to import all functions.
      */
 
-    from "Edger8rSyntax/Types.edl" import *;
-    from "Edger8rSyntax/Pointers.edl" import *;
-    from "Edger8rSyntax/Arrays.edl" import *;
-    from "Edger8rSyntax/Functions.edl" import *;
-
-    from "TrustedLibrary/Libc.edl" import *;
-    from "TrustedLibrary/Libcxx.edl" import ecall_exception, ecall_map;
-    from "TrustedLibrary/Thread.edl" import *;
-
     /*
      * ocall_print_string - invokes OCALL to display string buffer inside the enclave.
      *  [in]: copy the string buffer to App outside.
