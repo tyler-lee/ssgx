@@ -1,7 +1,7 @@
 ------------------------
 Purpose of SampleEnclave
 ------------------------
-The project demonstrates several fundamental usages of Intel(R) Software Guard 
+The project demonstrates several fundamental usages of Intel(R) Software Guard
 Extensions (Intel(R) SGX) SDK:
 - Initializing and destroying an enclave
 - Creating ECALLs or OCALLs
@@ -10,7 +10,8 @@ Extensions (Intel(R) SGX) SDK:
 ------------------------------------
 How to Build/Execute the Sample Code
 ------------------------------------
-1. Install Intel(R) SGX SDK for Linux* OS
+1. Install Intel(R) SGX PSW for Linux* OS
+	Use sgxsdk in current directory and make sure that $SGX_SDK is correct.
 2. Build the project with the prepared Makefile:
     a. Hardware Mode, Debug build:
         $ make
